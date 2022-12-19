@@ -47,6 +47,12 @@ class BioEval:
         self._synth_data = self._synth_data.iloc[:, 1:].T
         self._coex_res = None
         self._DE_res = None
+        self.stats1 = None
+        self.stats2 = None
+        self.true_down = None
+        self.true_up = None
+        self.false_down = None
+        self.false_up = None
 
         
 
@@ -57,18 +63,103 @@ class BioEval:
         labels_fake = dict(sorted(labels_fake.items()))
         df_real = pd.DataFrame()
         df_fake = pd.DataFrame()
-        # print('label counts real data:')
         for cls, count in labels_real.items():
             row = pd.DataFrame([[cls, count, int(count/sum(labels_real.values())*100)]], columns=['class', 'n samples', '%'+' of total'])
-            # print(f'    class: {cls}, n samples: {count},   {int(count/sum(labels_real.values())*100)}%')
             df_real = pd.concat([df_real, row])
-        # print('')
-        # print('label counts synthetic data:')
+
         for cls, count in labels_fake.items():
             row = pd.DataFrame([[cls, count, int(count/sum(labels_fake.values())*100)]], columns=['class', 'n samples', '%'+' of total'])
             df_fake = pd.concat([df_fake, row])
-            # print(f'    class: {cls}, n samples: {count},   {int(count/sum(labels_fake.values())*100)}%')
+        
+        
         return df_real, df_fake
+    
+    def count_stats(self, genes='all'):
+        stats = pd.DataFrame()
+        if genes=='all':
+            x1 = self._original_data.values.flatten()
+            x2 = self._synth_data.values.flatten()
+        else:
+            x1 = self._original_data.loc[genes, :].values.flatten()
+            x2 = self._synth_data.loc[genes, :].values.flatten()
+
+        stats = pd.concat([stats, pd.DataFrame([[x1.min(), x1.mean(), np.median(x1), x1.max()]], columns=['min', 'mean', 'median', 'max'], index=['real data'])])
+        stats = pd.concat([stats, pd.DataFrame([[x2.min(), x2.mean(), np.median(x2), x2.max()]], columns=['min', 'mean', 'median', 'max'], index=['synthetic data'])])
+        return stats
+
+    def plot_false_DE(self, which = 'up'):
+        if which == 'up':
+            d1 = self.false_up
+        else:
+            d1 = self.false_down
+        d = {}
+        colors = []
+        for k in d1.keys():
+            x1 = self._original_data.loc[list(d1[k]), :].values.flatten()
+            x2 = self._synth_data.loc[list(d1[k]), :].values.flatten()
+            d[k + '_real'] = x1
+            d[k + '_synth'] = x2
+            if len(colors) % 4==0:
+                colors += ['white', 'white']
+            else:
+                colors += ['grey', 'grey']
+
+        fig, ax = plt.subplots()
+        bplot = ax.boxplot(d.values(), sym='', showfliers=False, patch_artist=True)
+        for patch, color in zip(bplot['boxes'], colors):
+            patch.set_facecolor(color)
+
+        ax.set_xticklabels(d.keys())
+        plt.xticks(rotation = 90)
+        plt.title('Falsely ' + which + '-regulated genes')
+        plt.tight_layout()
+        # plt.show()
+        return fig
+
+    # def plot_DE(self, which = 'up'):
+    #     if which == 'up':
+    #         d1 = self.false_up
+    #         d2 = self.true_up
+    #     else:
+    #         d1 = self.false_down
+    #         d2 = self.true_down
+    #     d = {}
+    #     for k in d1.keys():
+    #         x1 = self._original_data.loc[list(d1[k]), :].values.flatten()
+    #         x2 = self._synth_data.loc[list(d1[k]), :].values.flatten()
+    #         d[k + '_delta_false_' + which] = x1-x2
+    #         x1 = self._original_data.loc[list(d2[k]), :].values.flatten()
+    #         x2 = self._synth_data.loc[list(d2[k]), :].values.flatten()
+    #         d[k + '_delta_true_' + which] = x1-x2
+
+
+    #     fig, ax = plt.subplots()
+    #     ax.boxplot(d.values(), sym='', showfliers=False)
+    #     ax.set_xticklabels(d.keys())
+    #     plt.xticks(rotation = 90)
+    #     plt.show()
+
+    def DE_stats(self, which = 'up'):
+        _stats = pd.DataFrame()
+        if which == 'up':
+            d1 = self.false_up
+            d2 = self.true_up
+        else:
+            d1 = self.false_down
+            d2 = self.true_down
+
+        for k in d1.keys():
+            genes1 = list(d1[k])
+            genes2 = list(d2[k])
+            stats1 = self.count_stats(genes=genes1)
+            stats2 = self.count_stats(genes=genes2)
+            stats1 = round(stats1.iloc[:2, :].diff(), 0).iloc[1:2,:]
+            stats2 = round(stats2.iloc[:2, :].diff(), 0).iloc[1:2,:]
+            stats1.index = [k + '_false_' + which]
+            stats2.index = [k + '_true_' + which]
+            _stats = pd.concat([_stats, stats1, stats2])
+        return _stats
+
 
     def _pearson_corr(self, mat):
 
@@ -159,6 +250,7 @@ class BioEval:
             ax2.plot(res['cutoff'], res['rmsd'], label='rmsd')
             ax2.set(xlabel='Pearson Correlation Cutoff', ylabel='RMSD')
             ax2.legend()
+            return fig
 
     def _get_label_comparisons(self, sample_to_label):
 

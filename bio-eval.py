@@ -3,6 +3,8 @@ import pandas as pd
 import argparse
 import numpy as np
 from tabulate import tabulate
+from matplotlib import pyplot as plt
+import os
 
 def parse_arguments():
     parser = argparse.ArgumentParser()
@@ -33,6 +35,10 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
+
+    if not os.path.isdir('./plots/'):
+        os.mkdir('./plots/')
+
     # read in real data:
     real_data = pd.read_csv(args.real_data)
     # read in synthetic data:
@@ -40,6 +46,7 @@ def main():
     # create Bioeval object:
     bioeval = BioEval(real_data, fake_data)
     real, fake = bioeval.summary()
+    stats = bioeval.count_stats()
     try:
         bioeval.DE_test()
         DE = ''
@@ -47,6 +54,9 @@ def main():
         DE = 'DE-test was not run, since at least 2 labels are required'
 
     coex_out = bioeval.coex_test()
+    fig = bioeval._plot_coex_test()
+    plt.tight_layout()
+    plt.savefig('./plots/coexpression.jpg')
     if args.verbose:
         
         print('label counts real data:')
@@ -54,6 +64,9 @@ def main():
         print('')
         print('label counts fake data:')
         print(tabulate(fake, headers='keys', tablefmt='psql'))
+        print('')
+        print('general count statistics:')
+        print(tabulate(stats, headers='keys', tablefmt='psql'))
 
         print('')
         print('')
@@ -61,6 +74,10 @@ def main():
         if DE == '':
             print(tabulate(bioeval.stats1, headers='keys', tablefmt='psql'))
             print(tabulate(bioeval.stats2, headers='keys', tablefmt='psql'))
+            fig = bioeval.plot_false_DE(which = 'up')
+            plt.savefig('./plots/bp_false_up.jpg')
+            fig = bioeval.plot_false_DE(which = 'down')
+            plt.savefig('./plots/bp_false_down.jpg')
         else:
             print(DE)
 
