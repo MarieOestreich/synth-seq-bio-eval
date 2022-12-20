@@ -208,7 +208,8 @@ class BioEval:
             if corrdf1_filt.shape[0] == 0 or corrdf2_filt.shape[0] == 0:
 #                 return (0, float('inf'))
                 res_row = pd.DataFrame([[c, 0, 'NA', corrdf1_filt.shape[0], corrdf2_filt.shape[0], 'None']], columns=['cutoff', 'perc_preserved', 'rmsd', 'edges_real', 'edges_fake', 'real-fake-ratio'])
-                res = res.append(res_row)
+                # res = res.append(res_row)
+                res = pd.concat([res, res_row])
                 continue
             # merge based on edges and remove entries that contain NAs (i.e., edges that were not preserved):
             common = pd.concat([corrdf1_filt, corrdf2_filt], axis=1).dropna()
@@ -226,7 +227,8 @@ class BioEval:
             # calculate root mean squared deviation for the correlation values of the preserved edges (the lower the better):
             rmsd = np.sqrt(np.mean((out["Correlation1"] - out["Correlation2"]) ** 2))
             res_row = pd.DataFrame([[c, perc_preserved_edges, rmsd, corrdf1_filt.shape[0], corrdf2_filt.shape[0], round(corrdf1_filt.shape[0]/corrdf2_filt.shape[0], 2)]], columns=['cutoff', 'perc_preserved', 'rmsd', 'edges_real', 'edges_fake', 'real-fake-ratio'])
-            res = res.append(res_row)
+            # res = res.append(res_row)
+            res = pd.concat([res, res_row])
 
         # res = res.dropna()
         self._coex_res = res
@@ -292,7 +294,8 @@ class BioEval:
                 lesserp = None
                 greaterp = None
             res = pd.DataFrame([[m1.columns[i], lesserp, greaterp]], columns=["gene", "lesser", "greater"])
-            out = out.append(res)
+            # out = out.append(res)
+            out = pd.concat([out, res])
         out = out.dropna(axis=0)
 
         # produces only NaN ?
@@ -307,7 +310,8 @@ class BioEval:
                 de_row = pd.DataFrame([[row['gene'], 1]], columns=['gene', 'DE'])
             else:
                 de_row = pd.DataFrame([[row['gene'], 0]], columns=['gene', 'DE'])
-            DE = DE.append(de_row)
+            # DE = DE.append(de_row)
+            DE = pd.concat([DE, de_row])
 
         return DE
 

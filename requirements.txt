@@ -5,3 +5,4 @@ statsmodels
 argparse
 tabulate
 matplotlib
+IPython
