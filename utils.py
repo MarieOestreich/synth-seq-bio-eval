@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from IPython.display import display
 import collections
 
-__all__ = ['BioEval', 'LabelError']
+__all__ = ['BioEval', 'LabelError', 'write_report']
 
 class LabelError(Exception):
     """Exception raised when attemting to run DE-gene test with only 1 class.
@@ -447,3 +447,65 @@ class BioEval:
         self.false_up = false_up
         self._DE_res = sum(score) / len(score)        
         return None
+
+
+
+def write_report(tables, page_title='title'):
+    # 1. Set up multiple variables to store the titles, text within the report
+    page_title_text=page_title
+
+    title = 'Bio-eval report'
+    general_info = 'General Information'
+    label_freqs = 'Label Frequencies'
+    real_data = 'Real Data'
+    synth_data = 'Synthetic Data'
+    gen_count_stats = 'General Count Statistics'
+
+    DE = 'Differential Expression'
+    description_false_DE = 'Boxplot of expression values of genes that have been identified as up-/down-regulated in the synthetic data, but that are not up-/down-regulated in the real data.'
+    fasle_de = 'False DE' # plots
+    plot1 = '.\\plots\\' + page_title + '_bp_false_down.jpg'
+    plot2 = '.\\plots\\' + page_title + '_bp_false_up.jpg'
+    plot3 = '.\\plots\\' + page_title + '_coexpression.jpg'
+
+    coexpr = 'Co-Expression' # table + plot
+
+    # 2. Combine them together using a long f-string
+    html = f'''
+        <html>
+            <head>
+                <title>{page_title_text}</title>
+            </head>
+            <body>
+                <h1>{title}</h1>
+
+                <h2>{general_info}</h2>
+                <h3>{label_freqs}</h3>
+                <p>{real_data}</p>
+                {tables[0].to_html()}
+                <p>{synth_data}</p>
+                {tables[1].to_html()}
+                <p>{''}</p>
+                <h2>{gen_count_stats}</h2>
+                {tables[2].to_html()}
+                <p>{''}</p>
+
+                <h2>{DE}</h2>
+                {tables[3].to_html()}
+                {tables[4].to_html()}
+                <p>{''}</p>
+                <h2>{fasle_de}</h2>
+                <p>{description_false_DE}</p>
+                <img src={plot1}>
+                <p>{''}</p>
+                <img src={plot2}>
+                <p>{''}</p>
+                <h2>{coexpr}</h2>
+                {tables[5].to_html()}
+                <img src={plot3}>
+            </body>
+        </html>
+        '''
+    # 3. Write the html string as an HTML file
+    with open('report.html', 'w') as f:
+        f.write(html)

@@ -23,6 +23,14 @@ def parse_arguments():
         help="path to synthetic data .csv",
     )
     parser.add_argument(
+        "--description",
+        "-d",
+        type=str,
+        default="my-bio-eval",
+        required=True,
+        help="keyword to use as file prefix",
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         type=bool,
@@ -38,7 +46,7 @@ def main():
 
     if not os.path.isdir('./plots/'):
         os.mkdir('./plots/')
-
+    tables = []
     # read in real data:
     real_data = pd.read_csv(args.real_data)
     # read in synthetic data:
@@ -56,35 +64,45 @@ def main():
     coex_out = bioeval.coex_test()
     fig = bioeval._plot_coex_test()
     plt.tight_layout()
-    plt.savefig('./plots/coexpression.jpg')
+    plt.savefig('./plots/'+args.description+'_coexpression.jpg')
     if args.verbose:
+        tables.append(real)
+        tables.append(fake)
+        tables.append(round(stats, 2))
         
-        print('label counts real data:')
-        print(tabulate(real, headers='keys', tablefmt='psql'))
-        print('')
-        print('label counts fake data:')
-        print(tabulate(fake, headers='keys', tablefmt='psql'))
-        print('')
-        print('general count statistics:')
-        print(tabulate(stats, headers='keys', tablefmt='psql'))
+        # print('label counts real data:')
+        # print(tabulate(real, headers='keys', tablefmt='psql'))
+        # print('')
+        # print('label counts fake data:')
+        # print(tabulate(fake, headers='keys', tablefmt='psql'))
+        # print('')
+        # print('general count statistics:')
+        # print(tabulate(stats, headers='keys', tablefmt='psql'))
 
-        print('')
-        print('')
-        print('DE_test')
+        # print('')
+        # print('')
+        # print('DE_test')
         if DE == '':
-            print(tabulate(bioeval.stats1, headers='keys', tablefmt='psql'))
-            print(tabulate(bioeval.stats2, headers='keys', tablefmt='psql'))
+            tables.append(bioeval.stats1)
+            tables.append(round(bioeval.stats2, 2))
+            
+            # print(tabulate(bioeval.stats1, headers='keys', tablefmt='psql'))
+            # print(tabulate(bioeval.stats2, headers='keys', tablefmt='psql'))
             fig = bioeval.plot_false_DE(which = 'up')
-            plt.savefig('./plots/bp_false_up.jpg')
+            plt.savefig('./plots/'+args.description+'_bp_false_up.jpg')
             fig = bioeval.plot_false_DE(which = 'down')
-            plt.savefig('./plots/bp_false_down.jpg')
+            plt.savefig('./plots/'+args.description+'_bp_false_down.jpg')
         else:
+            tables.append(pd.DataFrame())
+            tables.append(pd.DataFrame())
             print(DE)
 
-        print('')
-        print('')
-        print('co-expression test')
-        print(tabulate(coex_out, headers='keys', tablefmt='psql'))
+        # print('')
+        # print('')
+        # print('co-expression test')
+        # print(tabulate(coex_out, headers='keys', tablefmt='psql'))
+        tables.append(round(coex_out, 2))
+        write_report(tables, args.description)
 
 
 
