@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
 import scipy.stats
-import statsmodels.stats.multitest
 import matplotlib.pyplot as plt
-from IPython.display import display
 import collections
+import base64
 
 __all__ = ['BioEval', 'LabelError', 'write_report']
 
@@ -464,9 +463,9 @@ def write_report(tables, page_title='title'):
     DE = 'Differential Expression'
     description_false_DE = 'Boxplot of expression values of genes that have been identified as up-/down-regulated in the synthetic data, but that are not up-/down-regulated in the real data.'
     fasle_de = 'False DE' # plots
-    plot1 = '.\\plots\\' + page_title + '_bp_false_down.jpg'
-    plot2 = '.\\plots\\' + page_title + '_bp_false_up.jpg'
-    plot3 = '.\\plots\\' + page_title + '_coexpression.jpg'
+    plot1 = png2base64('./plots/' + page_title + '_bp_false_down.png')
+    plot2 = png2base64('./plots/' + page_title + '_bp_false_up.png')
+    plot3 = png2base64('./plots/' + page_title + '_coexpression.png')
 
     coexpr = 'Co-Expression' # table + plot
 
@@ -474,38 +473,46 @@ def write_report(tables, page_title='title'):
     html = f'''
         <html>
             <head>
-                <title>{page_title_text}</title>
+                <title style="font-family: Arial">{page_title_text}</title>
             </head>
             <body>
-                <h1>{title}</h1>
+                <h1 style="font-family: Arial">{title}</h1>
 
-                <h2>{general_info}</h2>
-                <h3>{label_freqs}</h3>
-                <p>{real_data}</p>
+                <h2 style="font-family: Arial">{general_info}</h2>
+                <h3 style="font-family: Arial">{label_freqs}</h3>
+                <p style="font-family: Arial">{real_data}</p>
                 {tables[0].to_html()}
-                <p>{synth_data}</p>
+                <p style="font-family: Arial">{synth_data}</p>
                 {tables[1].to_html()}
-                <p>{''}</p>
-                <h2>{gen_count_stats}</h2>
+                <p style="font-family: Arial">{''}</p>
+                <h2 style="font-family: Arial">{gen_count_stats}</h2>
                 {tables[2].to_html()}
-                <p>{''}</p>
+                <p style="font-family: Arial">{''}</p>
 
-                <h2>{DE}</h2>
+                <h2 style="font-family: Arial">{DE}</h2>
                 {tables[3].to_html()}
                 {tables[4].to_html()}
-                <p>{''}</p>
-                <h2>{fasle_de}</h2>
-                <p>{description_false_DE}</p>
-                <img src={plot1}>
-                <p>{''}</p>
-                <img src={plot2}>
-                <p>{''}</p>
-                <h2>{coexpr}</h2>
+                <p style="font-family: Arial">{''}</p>
+                <h2 style="font-family: Arial">{fasle_de}</h2>
+                <p style="font-family: Arial">{description_false_DE}</p>
+                <img src="data:image/png;base64,{plot1}">
+                <p style="font-family: Arial">{''}</p>
+                <img src="data:image/png;base64,{plot2}">
+                <p style="font-family: Arial">{''}</p>
+                <h2 style="font-family: Arial">{coexpr}</h2>
                 {tables[5].to_html()}
-                <img src={plot3}>
+                <img src="data:image/png;base64,{plot3}">
             </body>
         </html>
         '''
     # 3. Write the html string as an HTML file
-    with open('report.html', 'w') as f:
+    with open(page_title + '_report.html', 'w') as f:
         f.write(html)
+
+def png2base64(png):
+    with open(png, 'rb') as binary_file:
+        binary_file_data = binary_file.read()
+        base64_encoded_data = base64.b64encode(binary_file_data)
+        base64_message = base64_encoded_data.decode('utf-8')
+
+        return base64_message
