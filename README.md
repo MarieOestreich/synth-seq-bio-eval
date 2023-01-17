@@ -1,5 +1,12 @@
-# synth-seq-bio-eval
-Biology-based evaluation of synthetic transcriptomic data
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/50077786/212926291-26e7aea9-cf6e-4464-8f88-440bea2d3a9a.png" width="324" height="192">
+</p>
+
+# Biology-based Evaluation of Synthetic Transcriptomics Data
+This repo lets you assess if your synthetic transcriptomics dataset is biologically sound. It uses the original train dataset of your generative model as reference and computes the preservation of two common transcriptomics metrics in your synthetic data: Differential expression and gene co-expression.
+
+This repo is part of the **Helmholtz AI project [ProGenGen](https://progenegen.hmsp.center/)**, a joint project of the **[DZNE](https://www.dzne.de/en/)** and the **[CISPA](https://cispa.de/en)** to develop generative models for privacy preserving synthetic transcriptomics data.
 
 
 ## How to run it
